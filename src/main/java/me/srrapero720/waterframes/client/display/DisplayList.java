@@ -1,5 +1,6 @@
 package me.srrapero720.waterframes.client.display;
 
+import me.srrapero720.waterframes.DisplaysConfig;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -7,6 +8,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
+import org.watermedia.WaterMedia;
 
 @Environment(EnvType.CLIENT)
 public class DisplayList {

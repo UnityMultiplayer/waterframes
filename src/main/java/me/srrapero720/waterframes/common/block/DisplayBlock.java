@@ -1,7 +1,7 @@
 package me.srrapero720.waterframes.common.block;
 
-import me.srrapero720.waterframes.WFConfig;
-import me.srrapero720.waterframes.WFRegistry;
+import me.srrapero720.waterframes.DisplaysConfig;
+import me.srrapero720.waterframes.DisplaysRegistry;
 import me.srrapero720.waterframes.common.block.entity.DisplayTile;
 import me.srrapero720.waterframes.common.item.RemoteControl;
 import me.srrapero720.waterframes.common.screens.DisplayScreen;
@@ -70,6 +70,10 @@ public abstract class DisplayBlock extends BaseEntityBlock implements BlockGuiCr
 
     public abstract DirectionProperty getFacing();
 
+    public String getPermissionNode() {
+        return DisplaysRegistry.PERM_DISPLAYS_INTERACT;
+    }
+
     @Override
     public GuiLayer create(CompoundTag tag, Level level, BlockPos blockPos, BlockState blockState, Player player) {
         return level.getBlockEntity(blockPos) instanceof DisplayTile tile ? new DisplayScreen(tile) : null;
@@ -84,7 +88,7 @@ public abstract class DisplayBlock extends BaseEntityBlock implements BlockGuiCr
     }
 
     @Override public ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
-        var data = stack.get(WFRegistry.REMOTE_DATA);
+        var data = stack.get(DisplaysRegistry.REMOTE_DATA);
         if (stack.getItem() instanceof RemoteControl control && data != null) {
             boolean matchDim = control.getDimension(data).equals(level.dimension().location().toString());
             int[] position = control.getPosition(data);
@@ -100,6 +104,7 @@ public abstract class DisplayBlock extends BaseEntityBlock implements BlockGuiCr
 
                 int i = 0;
                 do {
+                    // TODO: use voxel shape
                     level.addParticle(opts, vec.x + randomNegative(Math.random()) / 4, vec.y, vec.z + randomNegative(Math.random()) / 4,
                             randomNegative(Math.random()), Math.random() * 3, randomNegative(Math.random()));
                     i++;
@@ -107,13 +112,13 @@ public abstract class DisplayBlock extends BaseEntityBlock implements BlockGuiCr
                 return ItemInteractionResult.SUCCESS;
             }
         }
-        if (!level.isClientSide && WFConfig.canInteractBlock(player)) GuiCreator.BLOCK_OPENER.open(player, pos);
+        if (!level.isClientSide && DisplaysConfig.canInteractBlock(player, this)) GuiCreator.BLOCK_OPENER.open(player, pos);
         return ItemInteractionResult.SUCCESS;
     }
 
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
-        if (!level.isClientSide && WFConfig.canInteractBlock(player)) GuiCreator.BLOCK_OPENER.open(player, pos);
+        if (!level.isClientSide && DisplaysConfig.canInteractBlock(player, this)) GuiCreator.BLOCK_OPENER.open(player, pos);
         return InteractionResult.SUCCESS;
     }
 
@@ -125,7 +130,7 @@ public abstract class DisplayBlock extends BaseEntityBlock implements BlockGuiCr
         return Math.random() > 0.5d ? -v : v;
     }
 
-    @Override protected void registerDefaultState(BlockState state) {
+    @Override public void registerDefaultState(BlockState state) {
         super.registerDefaultState(state
                 .setValue(WATERLOGGED, false)
                 .setValue(POWERED, false)
@@ -134,13 +139,10 @@ public abstract class DisplayBlock extends BaseEntityBlock implements BlockGuiCr
     }
 
     @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        super.createBlockStateDefinition(builder
-                .add(this.getFacing())
-                .add(ATTACHED_FACE)
-                .add(POWERED)
-                .add(WATERLOGGED)
-                .add(LIGHT_LEVEL)
-        );
+        super.createBlockStateDefinition(builder.add(
+                this.getFacing(), ATTACHED_FACE, POWERED, WATERLOGGED
+
+        ).add(LIGHT_LEVEL));
     }
 
     @Override public BlockState getStateForPlacement(BlockPlaceContext context) {
@@ -170,7 +172,7 @@ public abstract class DisplayBlock extends BaseEntityBlock implements BlockGuiCr
 
     @Override public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, BlockPos neighborPos, boolean isMoving) {
         super.neighborChanged(state, level, pos, block, neighborPos, isMoving);
-        if (!WFConfig.useRedstone() || !(level.getBlockEntity(pos) instanceof DisplayTile tile)) return;
+        if (!DisplaysConfig.useRedstone() || !(level.getBlockEntity(pos) instanceof DisplayTile tile)) return;
         boolean signal = level.hasNeighborSignal(pos);
 
         if (state.getValue(POWERED) != signal) {

@@ -15,14 +15,14 @@ public class WaterFramesClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        WFRegistry.initClient();
+        DisplaysRegistry.initClient();
         CreativeCoreClient.registerClientConfig(ID);
         DisplayTile.initClient();
 
         // EVENTS
         ClientTickEvents.END_CLIENT_TICK.register(client -> WaterFrames.tick());
         ClientLifecycleEvents.CLIENT_STARTED.register(client ->
-                WFRegistry.registerTexture(LOADING_ANIMATION, new TextureWrapper.Renderer(ImageAPI.loadingGif(WaterFrames.ID)))
+                DisplaysRegistry.registerTexture(LOADING_ANIMATION, new TextureWrapper.Renderer(ImageAPI.loadingGif(WaterFrames.ID)))
         );
     }
 }

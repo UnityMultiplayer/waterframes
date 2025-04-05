@@ -1,13 +1,14 @@
 package me.srrapero720.waterframes.common.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import me.srrapero720.waterframes.WFConfig;
-import me.srrapero720.waterframes.WFRegistry;
+import me.srrapero720.waterframes.DisplaysConfig;
+import me.srrapero720.waterframes.DisplaysRegistry;
 import me.srrapero720.waterframes.WaterFrames;
 import me.srrapero720.waterframes.common.block.data.types.PositionHorizontal;
 import me.srrapero720.waterframes.common.block.data.types.PositionVertical;
@@ -196,12 +197,12 @@ public class WaterFramesCommand {
         );
 
         DEFAULT_INPUTS = new ItemInput[] {
-                new ItemInput(Holder.direct(WFRegistry.REMOTE_ITEM), DataComponentPatch.builder().build()),
-                new ItemInput(Holder.direct(WFRegistry.FRAME_ITEM), DataComponentPatch.builder().build()),
-                new ItemInput(Holder.direct(WFRegistry.PROJECTOR_ITEM), DataComponentPatch.builder().build()),
-                new ItemInput(Holder.direct(WFRegistry.TV_ITEM), DataComponentPatch.builder().build()),
-                new ItemInput(Holder.direct(WFRegistry.BIG_TV_ITEM), DataComponentPatch.builder().build()),
-                new ItemInput(Holder.direct(WFRegistry.TV_BOX_ITEM), DataComponentPatch.builder().build())
+                new ItemInput(Holder.direct(DisplaysRegistry.REMOTE_ITEM), DataComponentPatch.builder().build()),
+                new ItemInput(Holder.direct(DisplaysRegistry.FRAME_ITEM), DataComponentPatch.builder().build()),
+                new ItemInput(Holder.direct(DisplaysRegistry.PROJECTOR_ITEM), DataComponentPatch.builder().build()),
+                new ItemInput(Holder.direct(DisplaysRegistry.TV_ITEM), DataComponentPatch.builder().build()),
+                new ItemInput(Holder.direct(DisplaysRegistry.BIG_TV_ITEM), DataComponentPatch.builder().build()),
+                new ItemInput(Holder.direct(DisplaysRegistry.TV_BOX_ITEM), DataComponentPatch.builder().build())
         };
 
         dispatcher.register(waterframes);
@@ -221,7 +222,7 @@ public class WaterFramesCommand {
 
         URI uri = WaterFrames.createURI(url);
 
-        if (tile.data.uri != null && tile.data.uri.equals(uri)) {
+        if (tile.data.hasUri() && tile.data.uri.equals(uri)) {
             tile.data.tick = 0;
             tile.data.tickMax = -1;
         }
@@ -448,12 +449,12 @@ public class WaterFramesCommand {
     }
 
     public static int whitelist$toggle(CommandSourceStack source) {
-        source.sendSuccess(msgSuccess("waterframes.commands.whitelist.toggle", WFConfig.toggleWhitelist() ? ACTIVATED : DEACTIVATED), true);
+        source.sendSuccess(msgSuccess("waterframes.commands.whitelist.toggle", DisplaysConfig.toggleWhitelist() ? ACTIVATED : DEACTIVATED), true);
         return 0;
     }
 
     public static int whitelist$remove(CommandSourceStack source, String value) {
-        boolean removed = WFConfig.removeOnWhitelist(value);
+        boolean removed = DisplaysConfig.removeOnWhitelist(value);
         if (removed)
             source.sendSuccess(msgSuccess("waterframes.commands.whitelist.remove", value), true);
         else
@@ -462,7 +463,7 @@ public class WaterFramesCommand {
     }
 
     public static int whitelist$add(CommandSourceStack source, String value) {
-        WFConfig.addOnWhitelist(value);
+        DisplaysConfig.addOnWhitelist(value);
         source.sendSuccess(msgSuccess("waterframes.commands.whitelist.add", value), true);
         return 0;
     }

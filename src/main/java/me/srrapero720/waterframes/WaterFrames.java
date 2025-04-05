@@ -13,31 +13,29 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 
 import java.io.File;
 import java.net.URI;
-
-import static org.watermedia.WaterMedia.IT;
 
 public class WaterFrames implements ModInitializer {
     // TOOLS
     public static final String ID = "waterframes";
     public static final String NAME = "WATERFrAMES";
     public static final Logger LOGGER = LogManager.getLogger(ID);
+    private static final Marker IT = MarkerManager.getMarker(ID);
     public static final ResourceLocation LOADING_ANIMATION = WaterFrames.asResource("loading_animation");
-    public static final long SYNC_TIME = 1000L;
+    public static final long SYNC_TIME = 2000L;
     private static int ticks = 0;
 
     @Override
     public void onInitialize() {
-        WFConfig.init();
-        WFRegistry.init();
+        DisplaysConfig.init();
+        DisplaysRegistry.init();
         DisplayTile.initCommon();
 
         LOGGER.info(IT, "Running WATERFrAMES v{}", FabricLoader.getInstance().getModContainer(ID).get().getMetadata().getVersion());
-        if (WaterFrames.isInstalled("mr_stellarity", "stellarity") && !WFConfig.isDevMode()) {
-            throw new WFRegistry.UnsupportedModException("mr_stellarity (Stellarity)", "breaks picture rendering, overwrites Minecraft core shaders and isn't possible work around that");
-        }
     }
 
     public static ResourceLocation asResource(String id) {
@@ -79,7 +77,7 @@ public class WaterFrames implements ModInitializer {
     }
 
     public static double getDistance(Level level, BlockPos pos, Position position) {
-        if (VSCompat.installed() && WFConfig.vsEurekaCompat()) {
+        if (VSCompat.installed() && DisplaysConfig.vsEurekaCompat()) {
             return Math.sqrt(VSCompat.getSquaredDistance(level, pos, position));
         }
         return Math.sqrt(pos.distToLowCornerSqr(position.x(), position.y(), position.z()));

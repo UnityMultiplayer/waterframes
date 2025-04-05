@@ -1,12 +1,12 @@
-import net.darkhax.curseforgegradle.TaskPublishCurseForge
-
 plugins {
     id 'java'
     id 'idea'
-    id 'fabric-loom' version '1.6-SNAPSHOT'
-    id 'com.modrinth.minotaur' version '2.+'
-    id 'net.darkhax.curseforgegradle' version '1.1.+'
+    id 'fabric-loom' version '1.9-SNAPSHOT'
+    id "me.modmuss50.mod-publish-plugin" version "0.8.3"
 }
+
+def MT_TOKEN = System.getenv("MODRINTH_TOKEN")
+def CF_TOKEN = System.getenv("CURSEFORGE_TOKEN")
 
 base {
     archivesName = modid
@@ -35,14 +35,12 @@ loom {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
+    maven { url 'https://maven.minecraftforge.net/' }
     maven { url 'https://repo.spongepowered.org/maven' }
     maven { url 'https://jitpack.io' }
     maven { url 'https://maven.parchmentmc.org' }
-    maven {
-        url 'https://www.cursemaven.com'
-        content {
-            includeGroup 'curse.maven'
-        }
+    maven { url 'https://www.cursemaven.com'
+        content {includeGroup 'curse.maven' }
     }
 }
 
@@ -51,14 +49,13 @@ dependencies {
     minecraft "com.mojang:minecraft:$mcversion"
     mappings loom.layered() {
         officialMojangMappings()
-//        parchment("org.parchmentmc.data:parchment-$mcversion:$mappings_version@zip")
+        parchment("org.parchmentmc.data:parchment-$mcversion:$mappings_version@zip")
     }
-    modImplementation "net.fabricmc:fabric-loader:${flversion}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabricversion}"
+    modImplementation "net.fabricmc:fabric-loader:$flversion"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:$fabricversion"
 
     //DEPENDENCIES
-    modImplementation "com.github.WaterMediaTeam.watermedia:build:$watermediaversion"
-    modCompileOnly "curse.maven:video-player-645407:$videoplayerversion"
+    modImplementation "com.github.WaterMediaTeam:watermedia:$watermediaversion"
     modImplementation "curse.maven:creativecore-257814:$creativecoreversion"
 }
 
@@ -84,59 +81,41 @@ jar {
     finalizedBy(remapJar)
 }
 
-task upload(type: GradleBuild) {
-    enabled = System.getenv("MODRINTH_TOKEN") != null && System.getenv("CURSEFORGE_TOKEN") != null
-    description 'Uploads new version to CurseForge and Modrinth'
-    group = 'publishing'
-    tasks = [ 'curseforge', 'modrinth' ]
-    dependsOn(remapJar)
-}
+publishMods {
+    file = remapJar.archiveFile
+    displayName = "WF-$modloader/mc$mcversion/v$modversion"
+    type = STABLE
+    changelog = getChangelogText()
 
-task curseforge(type: TaskPublishCurseForge) {
-    disableVersionDetection()
-    apiToken = System.getenv("CURSEFORGE_TOKEN")
+    maxRetries = 2
+    dryRun = false
 
-    def mainFile = upload(curseforgeid, remapJar)
-    mainFile.displayName = getVersionBuildName()
-    mainFile.addModLoader(modloader.toLowerCase().capitalize())
-    mainFile.addGameVersion(mcversion, "server", "client")
-    mainFile.addRequirement("creativecore", "watermedia")
-    mainFile.addOptional("video-player")
-    mainFile.addIncompatibility("stellarity")
-    mainFile.changelog = getChangelogText(false)
-    mainFile.changelogType = "markdown"
-    mainFile.releaseType = versiontype
-}
+    modLoaders.add(modloader.toLowerCase())
 
-modrinth {
-    token = System.getenv("MODRINTH_TOKEN")
-    projectId = modrinthid
+    curseforge {
+        accessToken = CF_TOKEN
+        projectId = curseforgeid
+        minecraftVersions.addAll(mcversion)
+        javaVersions.addAll(JavaVersion.VERSION_17)
+        clientRequired = true
+        serverRequired = true
+        projectSlug = modid
+        requires("fabric-api", "creativecore", "watermedia")
+    }
 
-    uploadFile = remapJar
-    versionName = getVersionBuildName()
-    versionNumber = version.toString()
-    versionType = versiontype
-    gameVersions = [ mcversion ]
-    changelog = getChangelogText(true)
-    loaders = [ modloader.toLowerCase() ]
-    dependencies {
-        required.project "creativecore"
-        required.project "watermedia"
-        required.project "fabric-api"
-        optional.project "video-player"
-        incompatible.project "stellarity"
+    modrinth {
+        accessToken = MT_TOKEN
+        projectId = modrinthid
+        minecraftVersions.addAll(mcversion)
+        requires("fabric-api", "creativecore", "watermedia")
     }
 }
 
-String getVersionBuildName() {
-    return "$modbrandname/${modloader.toLowerCase().capitalize()}/mc$mcversion/v$modversion"
-}
-
-String getChangelogText(boolean latest) {
-    String result = ''
+def getChangelogText() {
+    def result = ""
     for (String line: file('CHANGELOG.md').readLines('UTF-8')) {
-        if (latest && line.isEmpty()) return result
-        result += line + "\n"
+        if (line.isEmpty()) return result
+        result += line + '\n'
     }
     return result
 }

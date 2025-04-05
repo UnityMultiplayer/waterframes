@@ -1,10 +1,12 @@
 package me.srrapero720.waterframes.common.block.entity;
 
-import me.srrapero720.waterframes.WFConfig;
+import me.srrapero720.waterframes.DisplaysConfig;
 import me.srrapero720.waterframes.client.display.Display;
 import me.srrapero720.waterframes.common.block.DisplayBlock;
 import me.srrapero720.waterframes.common.block.data.DisplayCaps;
 import me.srrapero720.waterframes.common.block.data.DisplayData;
+import me.srrapero720.waterframes.common.block.data.types.PositionHorizontal;
+import me.srrapero720.waterframes.common.block.data.types.PositionVertical;
 import me.srrapero720.waterframes.common.network.DisplayNetwork;
 import me.srrapero720.waterframes.common.network.packets.*;
 import org.watermedia.api.image.ImageAPI;
@@ -71,7 +73,7 @@ public class DisplayTile extends BlockEntity {
 
     @Environment(EnvType.CLIENT)
     public Display requestDisplay() {
-        if (!this.data.active || (this.data.uri == null && display != null)) {
+        if (!this.data.active || (!this.data.hasUri() && display != null)) {
             this.cleanDisplay();
             return null;
         }
@@ -81,12 +83,12 @@ public class DisplayTile extends BlockEntity {
             return null;
         }
 
-        if (imageCache == null && this.data.uri == null) {
+        if (imageCache == null && !this.data.hasUri()) {
             this.cleanDisplay();
             return null;
         }
 
-        if (this.imageCache == null || (this.data.uri != null && !this.imageCache.uri.equals(this.data.uri))) {
+        if (this.imageCache == null || (this.data.hasUri() && !this.imageCache.uri.equals(this.data.uri))) {
             this.imageCache = ImageAPI.getCache(this.data.uri, Minecraft.getInstance());
             this.cleanDisplay();
         }
@@ -169,7 +171,7 @@ public class DisplayTile extends BlockEntity {
     }
 
     private int getLightLevel$internal() {
-        return  this.data.uri == null ? 0 : (int) (((float) this.data.brightness / 255f) * level.getMaxLightLevel());
+        return !this.data.hasUri() ? 0 : (int) (((float) this.data.brightness / 255f) * level.getMaxLightLevel());
     }
 
     private int getAnalogOutput$internal() {
@@ -230,6 +232,11 @@ public class DisplayTile extends BlockEntity {
         else            DisplayNetwork.sendClient(new LoopPacket(this.getBlockPos(), loop, true), this);
     }
 
+    public void position(boolean clientSide, PositionHorizontal horizontal, PositionVertical vertical) {
+        if (clientSide) DisplayNetwork.sendServer(new PositionPacket(this.getBlockPos(), horizontal, vertical, true));
+        else            DisplayNetwork.sendClient(new PositionPacket(this.getBlockPos(), horizontal, vertical, true), this);
+    }
+
     public void tick(BlockState state) {
         if (this.data.tickMax == -1 || this.data.tick < 0) this.data.tick = 0;
 
@@ -259,7 +266,7 @@ public class DisplayTile extends BlockEntity {
         }
 
         // LIGHT
-        boolean lightOnPlay = WFConfig.useLightOnPlay() && (WFConfig.forceLightOnPlay() || this.data.lit);
+        boolean lightOnPlay = DisplaysConfig.forceLightOnPlay() || DisplaysConfig.useLightOnPlay() && this.data.lit;
         int calculatedLight = getLightLevel$internal();
         int currentLight = state.getValue(DisplayBlock.LIGHT_LEVEL);
         if (lightOnPlay && currentLight != calculatedLight) {

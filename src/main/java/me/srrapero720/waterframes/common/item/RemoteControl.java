@@ -1,8 +1,8 @@
 package me.srrapero720.waterframes.common.item;
 
-import me.srrapero720.waterframes.WFConfig;
+import me.srrapero720.waterframes.DisplaysConfig;
+import me.srrapero720.waterframes.DisplaysRegistry;
 import me.srrapero720.waterframes.WaterFrames;
-import me.srrapero720.waterframes.WFRegistry;
 import me.srrapero720.waterframes.common.block.entity.DisplayTile;
 import me.srrapero720.waterframes.common.item.data.RemoteData;
 import me.srrapero720.waterframes.common.screens.RemoteControlScreen;
@@ -22,17 +22,13 @@ import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
-import org.jetbrains.annotations.Nullable;
 import team.creative.creativecore.common.gui.GuiLayer;
 import team.creative.creativecore.common.gui.creator.GuiCreator;
 import team.creative.creativecore.common.gui.creator.ItemGuiCreator;
@@ -56,19 +52,19 @@ public class RemoteControl extends Item implements ItemGuiCreator {
             return InteractionResultHolder.fail(stack);
         }
 
-        if (!WFConfig.canInteractItem(player)) {
+        if (!DisplaysConfig.canInteractRemote(player)) {
             this.sendFatal(player, Component.translatable("waterframes.common.access.denied"));
             return InteractionResultHolder.fail(stack);
         }
 
-        var data = stack.get(WFRegistry.REMOTE_DATA);
+        var data = stack.get(DisplaysRegistry.REMOTE_DATA);
         if (data == null) {
             this.sendFailed(player, Component.translatable("waterframes.remote.bound.failed"));
             return InteractionResultHolder.pass(stack);
         }
 
         if (player.isCrouching()) {
-            stack.set(WFRegistry.REMOTE_DATA, null);
+            stack.set(DisplaysRegistry.REMOTE_DATA, null);
             this.sendSuccess(player, Component.translatable("waterframes.remote.unbound.success"));
             return InteractionResultHolder.success(stack);
         }
@@ -78,7 +74,7 @@ public class RemoteControl extends Item implements ItemGuiCreator {
 
         if (level.getBlockEntity(blockPos) instanceof DisplayTile tile) {
             double distance = WaterFrames.getDistance(tile, player.position());
-            if (level.dimension().location().equals(dimension) && distance < WFConfig.maxRcDis()) {
+            if (level.dimension().location().equals(dimension) && distance < DisplaysConfig.maxRcDis()) {
                 var tag = new CompoundTag();
                 tag.putString("dimension", data.dimension());
                 tag.putIntArray("position", data.getPos());
@@ -92,7 +88,7 @@ public class RemoteControl extends Item implements ItemGuiCreator {
         }
 
         // FALLBACK UNBIND
-        player.getItemInHand(hand).set(WFRegistry.REMOTE_DATA, null);
+        player.getItemInHand(hand).set(DisplaysRegistry.REMOTE_DATA, null);
         this.sendFailed(player, Component.translatable("waterframes.remote.display.failed"));
         return InteractionResultHolder.fail(stack);
     }
@@ -102,13 +98,13 @@ public class RemoteControl extends Item implements ItemGuiCreator {
         var pos = context.getClickedPos();
         var level = context.getLevel();
         var player = context.getPlayer();
-        var data = context.getItemInHand().get(WFRegistry.REMOTE_DATA);
+        var data = context.getItemInHand().get(DisplaysRegistry.REMOTE_DATA);
 
-        if (player == null || context.getHand() == InteractionHand.OFF_HAND || data != null) {
+        if (player == null || context.getHand() == InteractionHand.OFF_HAND || data != null || !player.isCrouching()) {
             return InteractionResult.PASS;
         }
 
-        if (!WFConfig.canInteractItem(player)) {
+        if (!DisplaysConfig.canBindRemote(player)) {
             this.sendFatal(player, Component.translatable("waterframes.common.access.denied"));
             return InteractionResult.FAIL;
         }
@@ -116,7 +112,7 @@ public class RemoteControl extends Item implements ItemGuiCreator {
         if (level.getBlockEntity(pos) instanceof DisplayTile) {
             var item = context.getItemInHand();
 
-            item.set(WFRegistry.REMOTE_DATA, new RemoteData(level.dimension().location().toString(), pos.getX(), pos.getY(), pos.getZ()));
+            item.set(DisplaysRegistry.REMOTE_DATA, new RemoteData(level.dimension().location().toString(), pos.getX(), pos.getY(), pos.getZ()));
 
             this.sendSuccess(player, Component.translatable("waterframes.remote.bound.success"));
             return InteractionResult.SUCCESS;
@@ -127,15 +123,24 @@ public class RemoteControl extends Item implements ItemGuiCreator {
     }
 
     private void sendSuccess(Player player, MutableComponent component) {
-        if (player.level.isClientSide) player.displayClientMessage(component.withStyle(ChatFormatting.AQUA), true);
+        if (player.level.isClientSide) {
+            player.displayClientMessage(component.withStyle(ChatFormatting.AQUA), true);
+            player.playSound(NoteBlockInstrument.BELL.getSoundEvent().value(), 1.0f, 1.25f);
+        }
     }
 
     private void sendFailed(Player player, MutableComponent component) {
-        if (player.level.isClientSide) player.displayClientMessage(component.withStyle(ChatFormatting.RED), true);
+        if (player.level.isClientSide) {
+            player.displayClientMessage(component.withStyle(ChatFormatting.RED), true);
+            player.playSound(NoteBlockInstrument.HARP.getSoundEvent().value(), 1.0f, 0.75f);
+        }
     }
 
     private void sendFatal(Player player, MutableComponent component) {
-        if (player.level.isClientSide) player.displayClientMessage(component.withStyle(ChatFormatting.DARK_RED), true);
+        if (player.level.isClientSide) {
+            player.displayClientMessage(component.withStyle(ChatFormatting.DARK_RED), true);
+            player.playSound(NoteBlockInstrument.HARP.getSoundEvent().value(), 1.0f, 0.5f);
+        }
     }
 
     public String getDimension(CompoundTag tag) {
@@ -176,7 +181,7 @@ public class RemoteControl extends Item implements ItemGuiCreator {
     }
     @Override
     public boolean isFoil(ItemStack pStack) {
-        return pStack.get(WFRegistry.REMOTE_DATA) != null;
+        return pStack.get(DisplaysRegistry.REMOTE_DATA) != null;
     }
 
     @Override

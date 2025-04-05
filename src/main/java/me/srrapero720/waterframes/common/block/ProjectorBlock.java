@@ -1,6 +1,7 @@
 package me.srrapero720.waterframes.common.block;
 
 import com.mojang.serialization.MapCodec;
+import me.srrapero720.waterframes.DisplaysRegistry;
 import me.srrapero720.waterframes.common.block.entity.ProjectorTile;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -38,6 +39,11 @@ public class ProjectorBlock extends DisplayBlock {
     }
 
     @Override
+    public String getPermissionNode() {
+        return DisplaysRegistry.PERM_DISPLAYS_INTERACT_PROJECTOR;
+    }
+
+    @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         Direction direction = state.getValue(getFacing());
         Facing facing = Facing.get(direction);
@@ -60,7 +66,7 @@ public class ProjectorBlock extends DisplayBlock {
     }
 
     @Override
-    protected void registerDefaultState(BlockState state) {
+    public void registerDefaultState(BlockState state) {
         super.registerDefaultState(state.setValue(VISIBLE, true));
     }
 

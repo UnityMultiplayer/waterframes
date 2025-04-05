@@ -26,17 +26,13 @@
   "mixins": [
     "$modid.$mixin_file_suffix"
   ],
-  "accessWidener": "waterframes.accesswidener",
+  "accessWidener": "${modid}.accesswidener",
   "depends": {
-    "fabricloader": ">=0.14",
+    "fabricloader": ">=0.15",
     "minecraft": "~$mcversion",
     "java": ">=17",
     "fabric-api": "*",
     "creativecore": "$creativecorerange",
     "watermedia": "$watermediarange"
-  },
-  "breaks": {
-    "stellarity": "*",
-    "mr_stellarity": "*"
   }
 }

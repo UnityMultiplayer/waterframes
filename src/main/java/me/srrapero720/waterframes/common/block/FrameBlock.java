@@ -1,6 +1,7 @@
 package me.srrapero720.waterframes.common.block;
 
 import com.mojang.serialization.MapCodec;
+import me.srrapero720.waterframes.DisplaysRegistry;
 import me.srrapero720.waterframes.common.block.entity.FrameTile;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -40,6 +41,11 @@ public class FrameBlock extends DisplayBlock {
     }
 
     @Override
+    public String getPermissionNode() {
+        return DisplaysRegistry.PERM_DISPLAYS_INTERACT_FRAME;
+    }
+
+    @Override
     public @NotNull VoxelShape getShape(@NotNull BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         var facing = Facing.get(state.getValue(getFacing()));
         var box = new AlignedBox();
@@ -50,19 +56,18 @@ public class FrameBlock extends DisplayBlock {
     }
 
     @Override
-    protected void registerDefaultState(BlockState state) {
-        super.registerDefaultState(state.setValue(VISIBLE, true));
-    }
-
-    @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder.add(VISIBLE));
     }
 
     @Override
+    public void registerDefaultState(BlockState state) {
+        super.registerDefaultState(state.setValue(VISIBLE, true));
+    }
+
+    @Override
     public BlockState getStateForPlacement(@NotNull BlockPlaceContext context) {
-        return super.getStateForPlacement(context)
-                .setValue(getFacing(), context.getClickedFace());
+        return super.getStateForPlacement(context).setValue(getFacing(), context.getClickedFace());
     }
 
     @Override

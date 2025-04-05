@@ -1,3 +1,69 @@
+# UPDATE 2.1.12a
+- 🐛 Fixed wrong watermedia version range
+- 🐛 Fixed wrong creativecore version range
+- 🐛 Removed unintended stellarity "break" dependency
+
+# UPDATE 2.1.12
+- 🛠️ Removed slavisim mode (not needed/working anymore)
+- 🛠️ Ensure synchronized duration when vlc updates it (somehow for a few seconds VLC reports no duration after playing specific streams)
+- 🐛 Fixed wrong distance calculation on projection distance (causes projectors to not render)
+
+# UPDATE 2.1.11
+- 🛠️ Removed hard-crash of Stellarity mod (wasn't fixed, but recent WF changes makes it immune)
+- 🛠️ Ensure watermedia textures are not released by minecraft
+- 🐛 Fixed rendering issues on swords and enchanted items
+  - 🐛 At the cost of make images with smooth transparency get stepped-cut
+- ✨ `ᔑ↸↸ᒷ↸ ⍑ᒷ∷𝙹ʖ∷╎リᒷ`
+
+# UPDATE 2.1.10
+- ✨ Remote Arrows can now switch picture position (for frames and projectors)
+- 🛠️ Required watermedia 2.1.12 as minimum
+- 🛠️ Removed VideoPlayer integration (until VP gets updated)
+- 🐛 Fixed few rendering issues with texture transparency
+- 🐛 Fixed crashes typing URLS when the whitelist is enabled
+- 🐛 Fixed blocklight wasn't updated when option is disabled or media is updated
+
+# UPDATE 2.1.9
+- ✨ Added slavism mode configuration
+  - ✨ Integrated in server-side config (waterframes.multimedia.slavismMode)
+  - ✨ Added too a override config option on server-side config
+  - ✨ Added command `/waterframes slavism <enabled/disabled>`
+- 🛠️ Added `tenor.com` on the default whitelist
+- 🐛 Fixed compatibility with latest version of creativecore
+
+# UPDATE 2.1.8
+- 🌐 Added translation
+  - 🇧🇷 Brazil (by jmsgfhr)
+- ✨ [1.19.2] Extended support for 2 months (QianFuv)
+- ✨ Added compatibility with Forge Permissions API
+  - ✨ Added config option to enable permission usage (disabled by default)
+  - ✨ Permissions added
+    - `waterframes.displays.save`: Enables you save urls or settings in any display
+    - `waterframes.displays.interact`: Enables you interaction for any display (open gui)
+    - `waterframes.displays.interact.frame`: Enables you interaction for frames
+    - `waterframes.displays.interact.projector`: Enables you interaction for projectors
+    - `waterframes.displays.interact.tv`: Enables you interaction for all TVs
+    - `waterframes.remote.interact`: Enables you interact with remotes (open gui)
+    - `waterframes.remote.bind`: Enables you binding remotes (open gui)
+    - `waterframes.whitelist.bypass`: Enables you ability to bypass white/black list
+- ✨ Added config "allowSaving", enables to users ability to save urls or settings
+- ✨ Added config "blackWhitelist", inverts polarity of how a whitelist works
+- ✨ Added config "usableRemote", enables to users ability to interact with the remote (open the gui)
+- ✨ Added config "usableRemoteBinding", enables to users ability to bind remotes on any display
+- ✨ Added sound on binding and unbinding remotes
+- 🛠️ Added validator for whitelist hosts (invalid host must be removed)
+- 🛠️ Added better error displaying when URL isn't able to load
+- 🛠️ Set minimal required watermedia version to 2.1.6
+- 🐛 Fixed users aren't able to save on any display when URL bar is empty
+- 🐛 Fixed when permission to interact with displays isn't enabled, remotes aren't able to bind them
+- 🐛 Fixed update display data resets time to zero when it has an URL
+- 🐛 Fixed you won't need to crouch to bind unbinded remotes
+- 🐛 Fixed mute button is not visible on remotes
+- 🐛 Fixed audio position is displayed wronly on projectors
+
+# UPDATE 2.1.7a
+- 🐛 Fixed crashes when stellarity wasn't installed (it was supposted to be when is installed)
+
 # UPDATE 2.1.7
 - 🛠️ Updated to WaterMedia 2.1.x
 - ✨ Added new status icons (Media loading error, buffering, warning, success via cache)

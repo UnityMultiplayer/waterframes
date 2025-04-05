@@ -1,6 +1,7 @@
 package me.srrapero720.waterframes.common.block;
 
 import com.mojang.serialization.MapCodec;
+import me.srrapero720.waterframes.DisplaysRegistry;
 import me.srrapero720.waterframes.common.block.entity.BigTvTile;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
@@ -36,6 +37,11 @@ public class BigTvBlock extends DisplayBlock {
     @Override
     public DirectionProperty getFacing() {
         return BlockStateProperties.HORIZONTAL_FACING;
+    }
+
+    @Override
+    public String getPermissionNode() {
+        return DisplaysRegistry.PERM_DISPLAYS_INTERACT_TV;
     }
 
     public static AlignedBox box(Direction direction, Direction attachedFace, boolean renderMode) {
@@ -84,10 +90,8 @@ public class BigTvBlock extends DisplayBlock {
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        Direction current = context.getHorizontalDirection();
-        Player player = context.getPlayer();
-        return super.getStateForPlacement(context)
-                .setValue(this.getFacing(), player != null && player.isCrouching() ? current : current.getOpposite());
+        BlockState st = super.getStateForPlacement(context);
+        return st.setValue(this.getFacing(), st.getValue(this.getFacing()).getOpposite());
     }
 
     @Override

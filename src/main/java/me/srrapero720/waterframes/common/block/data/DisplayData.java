@@ -1,6 +1,6 @@
 package me.srrapero720.waterframes.common.block.data;
 
-import me.srrapero720.waterframes.WFConfig;
+import me.srrapero720.waterframes.DisplaysConfig;
 import me.srrapero720.waterframes.WaterFrames;
 import me.srrapero720.waterframes.common.block.DisplayBlock;
 import me.srrapero720.waterframes.common.block.data.types.AudioPosition;
@@ -11,7 +11,7 @@ import me.srrapero720.waterframes.common.screens.DisplayScreen;
 import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
-import team.creative.creativecore.common.util.math.vec.Vec2f;
+import org.joml.Vector2f;
 
 import java.net.URI;
 import java.util.UUID;
@@ -56,8 +56,8 @@ public class DisplayData {
     public URI uri = null;
     public UUID uuid = Util.NIL_UUID;
     public boolean active = true;
-    public final Vec2f min = new Vec2f(0f, 0f); // TODO: use vanilla Vec2
-    public final Vec2f max = new Vec2f(1f, 1f);
+    public Vector2f min = new Vector2f(0F, 0F);
+    public Vector2f max = new Vector2f(1F, 1F);
 
     public boolean flipX = false;
     public boolean flipY = false;
@@ -65,10 +65,10 @@ public class DisplayData {
     public float rotation = 0;
     public int alpha = 255;
     public int brightness = 255;
-    public int renderDistance = WFConfig.maxRenDis(32);
+    public int renderDistance = DisplaysConfig.maxRenDis(32);
 
-    public int volume = WFConfig.maxVol();
-    public int maxVolumeDistance = WFConfig.maxVolDis(20);
+    public int volume = DisplaysConfig.maxVol();
+    public int maxVolumeDistance = DisplaysConfig.maxVolDis(20);
     public int minVolumeDistance = Math.min(5, maxVolumeDistance);
 
     public boolean loop = true;
@@ -81,16 +81,17 @@ public class DisplayData {
     public boolean renderBothSides = false;
 
     // PROJECTOR VALUES
-    public float projectionDistance = WFConfig.maxProjDis(8f);
+    public float projectionDistance = DisplaysConfig.maxProjDis(8f);
     public float audioOffset = 0;
 
+    public boolean hasUri() { return this.uri != null; }
     public PositionHorizontal getPosX() { return this.min.x == 0 ? PositionHorizontal.LEFT : this.max.x == 1 ? PositionHorizontal.RIGHT : PositionHorizontal.CENTER; }
     public PositionVertical getPosY() { return this.min.y == 0 ? PositionVertical.TOP : this.max.y == 1 ? PositionVertical.BOTTOM : PositionVertical.CENTER; }
     public float getWidth() { return this.max.x - this.min.x; }
     public float getHeight() { return this.max.y - this.min.y; }
 
     public void save(CompoundTag nbt, DisplayTile tile) {
-        nbt.putString(URL, uri == null ? "" : uri.toString());
+        nbt.putString(URL, !hasUri() ? "" : uri.toString());
         nbt.putUUID(PLAYER_UUID, uuid);
         nbt.putBoolean(ACTIVE, active);
         if (tile.caps.resizes()) {
@@ -139,13 +140,13 @@ public class DisplayData {
             this.max.y = nbt.getFloat(MAX_Y);
             this.rotation = nbt.getFloat(ROTATION);
         }
-        this.renderDistance = WFConfig.maxRenDis(nbt.getInt(RENDER_DISTANCE));
+        this.renderDistance = DisplaysConfig.maxRenDis(nbt.getInt(RENDER_DISTANCE));
         this.flipX = nbt.getBoolean(FLIP_X);
         this.flipY = nbt.getBoolean(FLIP_Y);
         this.alpha = nbt.contains(ALPHA) ? nbt.getInt(ALPHA) : this.alpha;
         this.brightness = nbt.contains(BRIGHTNESS) ? nbt.getInt(BRIGHTNESS) : this.alpha;
-        this.volume = nbt.contains(VOLUME) ? WFConfig.maxVol(nbt.getInt(VOLUME)) : this.volume;
-        this.maxVolumeDistance = nbt.contains(VOL_RANGE_MAX) ? WFConfig.maxVolDis(nbt.getInt(VOL_RANGE_MAX)) : this.maxVolumeDistance;
+        this.volume = nbt.contains(VOLUME) ? DisplaysConfig.maxVol(nbt.getInt(VOLUME)) : this.volume;
+        this.maxVolumeDistance = nbt.contains(VOL_RANGE_MAX) ? DisplaysConfig.maxVolDis(nbt.getInt(VOL_RANGE_MAX)) : this.maxVolumeDistance;
         this.minVolumeDistance = nbt.contains(VOL_RANGE_MIN) ? Math.min(nbt.getInt(VOL_RANGE_MIN), this.maxVolumeDistance) : this.minVolumeDistance;
         this.paused = nbt.getBoolean(PAUSED);
         this.muted = nbt.getBoolean(MUTED);
@@ -159,7 +160,7 @@ public class DisplayData {
         }
 
         if (tile.caps.projects()) {
-            this.projectionDistance = nbt.contains(PROJECTION_DISTANCE) ? WFConfig.maxProjDis(nbt.getInt(PROJECTION_DISTANCE)) : this.projectionDistance;
+            this.projectionDistance = nbt.contains(PROJECTION_DISTANCE) ? DisplaysConfig.maxProjDis(nbt.getInt(PROJECTION_DISTANCE)) : this.projectionDistance;
             this.audioOffset = nbt.contains(AUDIO_OFFSET) ? nbt.getFloat(AUDIO_OFFSET) : this.audioOffset;
         }
 
@@ -179,7 +180,7 @@ public class DisplayData {
                 this.flipX = nbt.getBoolean("flipX");
                 this.flipY = nbt.getBoolean("flipY");
 
-                this.maxVolumeDistance = WFConfig.maxVolDis((int) nbt.getFloat("max"));
+                this.maxVolumeDistance = DisplaysConfig.maxVolDis((int) nbt.getFloat("max"));
                 this.minVolumeDistance = Math.min((int) nbt.getFloat("min"), maxVolumeDistance);
 
                 this.renderDistance = nbt.getInt("render");
@@ -248,7 +249,7 @@ public class DisplayData {
     }
 
     private void restrictWidth() {
-        float maxWidth = WFConfig.maxWidth();
+        float maxWidth = DisplaysConfig.maxWidth();
         if (getWidth() > maxWidth) {
             switch (getPosX()) {
                 case LEFT -> {
@@ -274,7 +275,7 @@ public class DisplayData {
     }
 
     private void restrictHeight() {
-        float maxHeight = WFConfig.maxHeight();
+        float maxHeight = DisplaysConfig.maxHeight();
         if (getHeight() > maxHeight) {
             switch (getPosY()) {
                 case TOP -> {
@@ -339,19 +340,19 @@ public class DisplayData {
 
     public static void sync(DisplayTile tile, Player player, CompoundTag nbt) {
         String url = nbt.getString(URL);
-        if (WFConfig.canSave(player, url)) {
+        if (DisplaysConfig.canSave(player, url)) {
             final URI uri = WaterFrames.createURI(url);
-            if (tile.data.uri == null || tile.data.uri.equals(uri)) {
+            if (!tile.data.hasUri() || !tile.data.uri.equals(uri)) {
                 tile.data.tick = 0;
                 tile.data.tickMax = -1;
             }
             tile.data.uri = uri;
-            tile.data.uuid = tile.data.uri != null ? player.getUUID() : Util.NIL_UUID;
+            tile.data.uuid = tile.data.hasUri() ? player.getUUID() : Util.NIL_UUID;
             tile.data.active = nbt.getBoolean(ACTIVE);
 
             if (tile.caps.resizes()) {
-                float width = WFConfig.maxWidth(nbt.getFloat("width"));
-                float height = WFConfig.maxHeight(nbt.getFloat("height"));
+                float width = DisplaysConfig.maxWidth(nbt.getFloat("width"));
+                float height = DisplaysConfig.maxHeight(nbt.getFloat("height"));
                 int posX = nbt.getInt("pos_x");
                 int posY = nbt.getInt("pos_y");
 
@@ -364,9 +365,9 @@ public class DisplayData {
             tile.data.flipY = nbt.getBoolean(FLIP_Y);
             tile.data.alpha = nbt.getInt(ALPHA);
             tile.data.brightness = nbt.getInt(BRIGHTNESS);
-            tile.data.renderDistance = WFConfig.maxRenDis(nbt.getInt(RENDER_DISTANCE));
-            tile.data.volume = WFConfig.maxVol(nbt.getInt(VOLUME));
-            tile.data.maxVolumeDistance = WFConfig.maxVolDis(nbt.getInt(VOL_RANGE_MAX));
+            tile.data.renderDistance = DisplaysConfig.maxRenDis(nbt.getInt(RENDER_DISTANCE));
+            tile.data.volume = DisplaysConfig.maxVol(nbt.getInt(VOLUME));
+            tile.data.maxVolumeDistance = DisplaysConfig.maxVolDis(nbt.getInt(VOL_RANGE_MAX));
             tile.data.minVolumeDistance = Math.min(nbt.getInt(VOL_RANGE_MIN), tile.data.maxVolumeDistance);
             if (tile.data.minVolumeDistance > tile.data.maxVolumeDistance)
                 tile.data.maxVolumeDistance = tile.data.minVolumeDistance;
@@ -384,7 +385,7 @@ public class DisplayData {
             if (tile.caps.projects()) {
                 int mode = nbt.getInt(AUDIO_OFFSET);
 
-                tile.data.projectionDistance = WFConfig.maxProjDis(nbt.getFloat(PROJECTION_DISTANCE));
+                tile.data.projectionDistance = DisplaysConfig.maxProjDis(nbt.getFloat(PROJECTION_DISTANCE));
                 tile.data.setAudioPosition(AudioPosition.VALUES[mode]);
             }
         }

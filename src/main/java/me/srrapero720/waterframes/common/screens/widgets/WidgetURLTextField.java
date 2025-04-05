@@ -1,6 +1,6 @@
 package me.srrapero720.waterframes.common.screens.widgets;
 
-import me.srrapero720.waterframes.WFConfig;
+import me.srrapero720.waterframes.DisplaysConfig;
 import me.srrapero720.waterframes.WaterFrames;
 import me.srrapero720.waterframes.common.block.data.DisplayData;
 import me.srrapero720.waterframes.common.block.entity.DisplayTile;
@@ -21,7 +21,7 @@ public class WidgetURLTextField extends GuiTextfield {
         super(DisplayData.URL);
         this.setMaxStringLength(2048);
         this.setSuggestion("https://i.imgur.com/1yCDs5C.mp4");
-        this.setText(tile.data.uri != null ? tile.data.uri.toString() : "");
+        this.setText(tile.data.hasUri() ? tile.data.uri.toString() : "");
     }
 
     @Override
@@ -42,7 +42,7 @@ public class WidgetURLTextField extends GuiTextfield {
             builder.text(ChatFormatting.BLUE + GuiControl.translate("waterframes.gui.url.tooltip.empty"));
         } else if (!isUrlValid(this.getText())) {
             builder.text(ChatFormatting.RED + GuiControl.translate("waterframes.gui.url.tooltip.invalid_url"));
-        } else if (!WFConfig.canSave(this.getPlayer(), this.getText())) {
+        } else if (!DisplaysConfig.canSave(this.getPlayer(), this.getText())) {
             builder.text(ChatFormatting.RED + GuiControl.translate("waterframes.gui.url.tooltip.not_whitelisted"));
         }
 

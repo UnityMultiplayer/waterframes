@@ -8,7 +8,6 @@ import me.srrapero720.waterframes.common.item.RemoteControl;
 import me.srrapero720.waterframes.common.item.data.CodecManager;
 import me.srrapero720.waterframes.common.item.data.RemoteData;
 import me.srrapero720.waterframes.common.network.packets.*;
-import org.watermedia.api.image.ImageAPI;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
@@ -22,6 +21,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 
@@ -30,7 +30,7 @@ import java.util.function.Supplier;
 import static me.srrapero720.waterframes.common.network.DisplayNetwork.*;
 import static me.srrapero720.waterframes.WaterFrames.*;
 
-public class WFRegistry {
+public class DisplaysRegistry {
     /* DATA */
     public static final DataComponentType<RemoteData> REMOTE_DATA = Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE, resloc("remote"), new DataComponentType.Builder<RemoteData>()
             .persistent(CodecManager.REMOTE_CODEC)
@@ -77,6 +77,21 @@ public class WFRegistry {
                 output.accept(TV_BOX_ITEM);
             })
             .build());
+
+    /* PERMISSIONS */
+    public static final String
+            PERM_DISPLAYS_EDIT = "waterframes.displays.save",
+            PERM_DISPLAYS_INTERACT = "waterframes.displays.interact",
+            PERM_DISPLAYS_INTERACT_FRAME = "waterframes.displays.interact.frame",
+            PERM_DISPLAYS_INTERACT_PROJECTOR = "waterframes.displays.interact.projector",
+            PERM_DISPLAYS_INTERACT_TV = "waterframes.displays.interact.tv",
+            PERM_REMOTE_INTERACT = "waterframes.remote.interact",
+            PERM_REMOTE_BIND = "waterframes.remote.bind",
+            PERM_WHITELIST_BYPASS = "waterframes.whitelist.bypass";
+
+    public static boolean getPermBoolean(Player player, String node) {
+        return DisplaysConfig.isOwner(player) || player.hasPermissions(2);
+    }
 
     private static BlockEntityType<DisplayTile> tile(BlockEntityType.BlockEntitySupplier<DisplayTile> creator, Supplier<DisplayBlock> block) {
         return BlockEntityType.Builder.of(creator, block.get()).build(null);

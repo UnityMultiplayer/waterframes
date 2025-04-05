@@ -1,6 +1,7 @@
 package me.srrapero720.waterframes;
 
 import net.fabricmc.loader.api.FabricLoader;
+import me.srrapero720.waterframes.common.block.DisplayBlock;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -9,7 +10,6 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
-import org.jetbrains.annotations.NotNull;
 import team.creative.creativecore.Side;
 import team.creative.creativecore.common.config.api.CreativeConfig;
 import team.creative.creativecore.common.config.api.ICreativeConfig;
@@ -21,16 +21,16 @@ import java.util.*;
 
 import static me.srrapero720.waterframes.WaterFrames.ID;
 
-public class WFConfig implements ICreativeConfig {
+public class DisplaysConfig implements ICreativeConfig {
     public static final Marker IT = MarkerManager.getMarker("Config");
-    public static final WFConfig ROOT = new WFConfig();
-    public static final WFConfig.Rendering RENDERING = new WFConfig.Rendering();
-    public static final WFConfig.Multimedia MULTIMEDIA = new WFConfig.Multimedia();
-    public static final WFConfig.Multimedia.WaterMedia WATERMEDIA = new WFConfig.Multimedia.WaterMedia();
-    public static final WFConfig.BlockBehavior BEHAVIOR = new WFConfig.BlockBehavior();
-    public static final WFConfig.RemoteControl REMOTE = new WFConfig.RemoteControl();
-    public static final WFConfig.Permissions PERMISSIONS = new WFConfig.Permissions();
-    public static final WFConfig.Permissions.Whitelist WHITELIST = new WFConfig.Permissions.Whitelist();
+    public static final DisplaysConfig ROOT = new DisplaysConfig();
+    public static final DisplaysConfig.Rendering RENDERING = new DisplaysConfig.Rendering();
+    public static final DisplaysConfig.Multimedia MULTIMEDIA = new DisplaysConfig.Multimedia();
+    public static final DisplaysConfig.Multimedia.WaterMedia WATERMEDIA = new DisplaysConfig.Multimedia.WaterMedia();
+    public static final DisplaysConfig.BlockBehavior BEHAVIOR = new DisplaysConfig.BlockBehavior();
+    public static final DisplaysConfig.RemoteControl REMOTE = new DisplaysConfig.RemoteControl();
+    public static final DisplaysConfig.Permissions PERMISSIONS = new DisplaysConfig.Permissions();
+    public static final DisplaysConfig.Permissions.Whitelist WHITELIST = new DisplaysConfig.Permissions.Whitelist();
 
     public static class Rendering {
         // RENDERING
@@ -114,6 +114,24 @@ public class WFConfig implements ICreativeConfig {
         @CreativeConfig(type = ConfigSynchronization.SERVER)
         public boolean useForAnyone = true;
 
+        @CreativeConfig(type = ConfigSynchronization.SERVER)
+        public boolean useBindingRemotes = true;
+
+        @CreativeConfig(type = ConfigSynchronization.SERVER)
+        public boolean useRemotes = true;
+
+        @CreativeConfig(type = ConfigSynchronization.SERVER)
+        public boolean useWhitelist = true;
+
+        @CreativeConfig(type = ConfigSynchronization.SERVER)
+        public boolean blackWhitelist = false;
+
+        @CreativeConfig(type = ConfigSynchronization.SERVER)
+        public boolean allowSaving = true;
+
+        @CreativeConfig(type = ConfigSynchronization.SERVER)
+        public boolean usePermissionAPI = false;
+
         public static class Whitelist {
             @CreativeConfig(type = ConfigSynchronization.SERVER)
             public boolean useWhitelist = true;
@@ -187,7 +205,7 @@ public class WFConfig implements ICreativeConfig {
         permissions.registerValue("Whitelist", WHITELIST);
     }
 
-    public WFConfig() {
+    public DisplaysConfig() {
 
     }
 
@@ -251,19 +269,21 @@ public class WFConfig implements ICreativeConfig {
         if (!useWhitelist()) return true;
 
         // watermedia driven protocol
-        if (uri.getAuthority().equals("water")) return true;
+        String scheme = uri.getScheme();
+        if (scheme == null)
+            return false; // no scheme, no url, in the best case this must never happend
 
-        try {
-            var host = uri.getHost();
-            if (host == null) return false;
+        if (scheme.equals("water")) return true;
 
-            for (var s: WHITELIST.whitelist) {
-                if (host.endsWith("." + s) || host.equals(s)) {
-                    return true;
-                }
+        var host = uri.getHost();
+        if (host == null) return false;
+
+        for (var s: WHITELIST.whitelist) {
+            if (host.endsWith("." + s) || host.equals(s)) {
+                return !PERMISSIONS.blackWhitelist;
             }
-        } catch (Exception ignored) {}
-        return false;
+        }
+        return PERMISSIONS.blackWhitelist;
     }
     public static <T> Set<T> mutableSet(Iterator<T> it) {
         var list = new HashSet<T>();
@@ -274,53 +294,85 @@ public class WFConfig implements ICreativeConfig {
     }
 
     public static boolean canSave(Player player, String url) {
-        if (isAdmin(player)) return true;
+        URI uri = WaterFrames.createURI(url);
+        boolean valid = uri != null || url.isEmpty();
+        if (PERMISSIONS.usePermissionAPI) {
+            boolean canSave = DisplaysRegistry.getPermBoolean(player, DisplaysRegistry.PERM_DISPLAYS_EDIT);
+            boolean canBypass = DisplaysRegistry.getPermBoolean(player, DisplaysRegistry.PERM_WHITELIST_BYPASS);
+            boolean whitelisted = isWhiteListed(uri);
 
-        try {
-            URI uri = WaterFrames.createURI(url);
-            if (uri == null) return false;
-            return url.isEmpty() || isWhiteListed(uri);
-        } catch (Exception e) {
+            if (canSave && (whitelisted || canBypass)) {
+                return valid;
+            }
+
             return false;
+        } else {
+            boolean canSave = PERMISSIONS.allowSaving;
+            if (isAdmin(player)) return valid;
+            if (url.isEmpty()) return true;
+            return valid && canSave && isWhiteListed(uri);
         }
     }
 
-    public static boolean canInteractBlock(Player player) {
-        GameType gameType = (player instanceof ServerPlayer serverPlayer)
-                ? serverPlayer.gameMode.getGameModeForPlayer()
-                : Minecraft.getInstance().gameMode.getPlayerMode();
+    public static boolean canInteractBlock(Player player, DisplayBlock block) {
+        if (PERMISSIONS.usePermissionAPI) {
+            String NODE = block.getPermissionNode();
 
-        if (isAdmin(player)) return true;
-        if (!useInSurv() && gameType.equals(GameType.SURVIVAL)) return false;
-        if (!useInAdv() && gameType.equals(GameType.ADVENTURE)) return false;
+            return DisplaysRegistry.getPermBoolean(player, DisplaysRegistry.PERM_DISPLAYS_INTERACT) || DisplaysRegistry.getPermBoolean(player, NODE);
+        } else {
+            GameType gameType = (player instanceof ServerPlayer serverPlayer)
+                    ? serverPlayer.gameMode.getGameModeForPlayer()
+                    : Minecraft.getInstance().gameMode.getPlayerMode();
+
+            if (isAdmin(player)) return true;
+            if (!useInSurv() && gameType.equals(GameType.SURVIVAL)) return false;
+            if (!useInAdv() && gameType.equals(GameType.ADVENTURE)) return false;
+        }
 
         return useForAnyone();
     }
 
-    public static boolean canInteractItem(Player player) {
-        if (isAdmin(player)) return true;
-        return useForAnyone();
+    public static boolean canInteractRemote(Player player) {
+        if (PERMISSIONS.usePermissionAPI) {
+            return DisplaysRegistry.getPermBoolean(player, DisplaysRegistry.PERM_REMOTE_INTERACT) || isOwner(player);
+        } else {
+            if (isAdmin(player)) return true;
+            return PERMISSIONS.useRemotes;
+        }
+    }
+
+    public static boolean canBindRemote(Player player) {
+        if (PERMISSIONS.usePermissionAPI) {
+            return DisplaysRegistry.getPermBoolean(player, DisplaysRegistry.PERM_REMOTE_BIND) || isOwner(player);
+        } else {
+            if (isAdmin(player)) return true;
+            return PERMISSIONS.useBindingRemotes;
+        }
     }
 
     public static boolean isAdmin(Player player) {
         Level level = player.level;
 
         // OWNER
-        String name = player.getGameProfile().getName();
-        if (name.equals("SrRaapero720") || name.equals("SrRapero720")) {
-            return true;
-        }
+        boolean owner = isOwner(player);
+        if (owner) return true;
 
         if (level.isClientSide()) { // validate if was singleplayer and if was the admin
             IntegratedServer integrated = Minecraft.getInstance().getSingleplayerServer();
             if (integrated != null) {
                 return integrated.isSingleplayerOwner(player.getGameProfile()) || player.hasPermissions(integrated.getOperatorUserPermissionLevel());
-            } else { // is a guest, check perms
+            } else { // its a guest, check perms
                 return player.hasPermissions(4);
             }
         } else {
             return player.hasPermissions(4);
         }
+    }
+
+    public static boolean isOwner(Player player) {
+        // OWNER
+        String name = player.getGameProfile().getName();
+        return name.equals("SrRaapero720") || name.equals("SrRapero720");
     }
 
     public static boolean isDevMode() {

@@ -1,7 +1,9 @@
 package me.srrapero720.waterframes.common.screens;
 
-import me.srrapero720.waterframes.WFConfig;
+import me.srrapero720.waterframes.DisplaysConfig;
 import me.srrapero720.waterframes.WaterFrames;
+import me.srrapero720.waterframes.common.block.data.types.PositionHorizontal;
+import me.srrapero720.waterframes.common.block.data.types.PositionVertical;
 import me.srrapero720.waterframes.common.block.entity.DisplayTile;
 import me.srrapero720.waterframes.common.screens.styles.IconStyles;
 import me.srrapero720.waterframes.common.screens.styles.ScreenStyles;
@@ -85,7 +87,7 @@ public class RemoteControlScreen extends GuiLayer {
             }
         };
 
-        this.muted = new GuiButtonIcon("muted_toggle", IconStyles.VOLUME_MUTE, button -> tile.setMute(true, !tile.data.muted)) {
+        this.muted = new GuiButtonIcon("muted_toggle", IconStyles.VOLUME_0, button -> tile.setMute(true, !tile.data.muted)) {
             @Override
             @Environment(EnvType.CLIENT)
             public StyleDisplay getBackground(GuiStyle style, StyleDisplay display) {
@@ -99,17 +101,29 @@ public class RemoteControlScreen extends GuiLayer {
             }
         };
 
-        this.arrowUp = new GuiButtonIcon("arrow_up", IconStyles.ARROW_UP, button -> {});
-        this.arrowDown = new GuiButtonIcon("arrow_down", IconStyles.ARROW_DOWN, button -> {});
-        this.arrowLeft = new GuiButtonIcon("arrow_left", IconStyles.ARROW_LEFT, button -> {});
-        this.arrowRight = new GuiButtonIcon("arrow_right", IconStyles.ARROW_RIGHT, button -> {});
-        this.arrowCenter = new GuiButtonIcon("arrow_center", IconStyles.ARROW_CENTER, button -> {});
+        this.arrowUp = new GuiButtonIcon("arrow_up", IconStyles.ARROW_UP, button -> {
+            tile.position(true, null, tile.data.getPosY().up());
+        });
+        this.arrowDown = new GuiButtonIcon("arrow_down", IconStyles.ARROW_DOWN, button -> {
+            tile.position(true, null, tile.data.getPosY().down());
+        });
+        this.arrowLeft = new GuiButtonIcon("arrow_left", IconStyles.ARROW_LEFT, button -> {
+            tile.position(true, tile.data.getPosX().left(), null);
+        });
+        this.arrowRight = new GuiButtonIcon("arrow_right", IconStyles.ARROW_RIGHT, button -> {
+            tile.position(true, tile.data.getPosX().right(), null);
+        });
+        this.arrowCenter = new GuiButtonIcon("arrow_center", IconStyles.ARROW_CENTER, button -> {
+            tile.position(true, PositionHorizontal.CENTER, PositionVertical.CENTER);
+        });
 
-        this.arrowUp.setEnabled(false);
-        this.arrowDown.setEnabled(false);
-        this.arrowLeft.setEnabled(false);
-        this.arrowRight.setEnabled(false);
-        this.arrowCenter.setEnabled(false);
+        if (!tile.caps.resizes()) {
+            this.arrowUp.setEnabled(false);
+            this.arrowDown.setEnabled(false);
+            this.arrowLeft.setEnabled(false);
+            this.arrowRight.setEnabled(false);
+            this.arrowCenter.setEnabled(false);
+        }
 
         this.reload = new GuiButtonIcon("reload", IconStyles.RELOAD, button -> { if (tile.imageCache != null) tile.imageCache.reload(); });
 
@@ -200,7 +214,7 @@ public class RemoteControlScreen extends GuiLayer {
         if (!isClient()) return;
 
         double distance = WaterFrames.getDistance(tile, player.position());
-        if (distance < WFConfig.maxRcDis()) {
+        if (distance < DisplaysConfig.maxRcDis()) {
             if (!allEnabled) {
                 this.allEnabled = true;
                 hyperIterate(this.iterator(), c -> {
@@ -212,7 +226,7 @@ public class RemoteControlScreen extends GuiLayer {
             if (distance == 0) {
                 this.signal.setIcon(IconStyles.SIGNAL_4);
             } else {
-                int diff = (int) ((distance / WFConfig.maxRcDis()) * 100); // 100 - far | 0 - closer
+                int diff = (int) ((distance / DisplaysConfig.maxRcDis()) * 100); // 100 - far | 0 - closer
                 if (diff < 25) {
                     this.signal.setIcon(IconStyles.SIGNAL_4);
                 } else if (diff < 50) {

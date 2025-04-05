@@ -2,7 +2,7 @@ package me.srrapero720.waterframes.mixin.impl;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import me.srrapero720.waterframes.WFConfig;
+import me.srrapero720.waterframes.DisplaysConfig;
 import me.srrapero720.waterframes.WaterFrames;
 import me.srrapero720.waterframes.common.block.entity.DisplayTile;
 import net.minecraft.Util;
@@ -27,7 +27,7 @@ public class MinecraftServerMixin {
 
     @WrapOperation(method = "runServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/Util;getNanos()J", ordinal = 1))
     public long redirect$runServer$getMillisWhile(Operation<Long> original) {
-        if (!WFConfig.useLagTickCorrection()) return original.call();
+        if (!DisplaysConfig.useLagTickCorrection()) return original.call();
         long millis = Util.getMillis();
         long time = millis - wf$lastMillisTime;
         if (time > 100) // 50ms is 1 tick
