@@ -11,10 +11,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import org.joml.Matrix4f;
-import team.creative.creativecore.client.render.GuiRenderHelper;
-import team.creative.creativecore.common.gui.GuiChildControl;
-import team.creative.creativecore.common.gui.controls.simple.GuiIcon;
-import team.creative.creativecore.common.util.math.geo.Rect;
+import team.creative.creativecore.common.gui.control.simple.GuiIcon;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,13 +27,13 @@ public class WidgetClickableArea extends GuiIcon {
     }
 
     @Override
-    protected void renderContent(GuiGraphics guiGraphics, GuiChildControl control, Rect rect, int mouseX, int mouseY) {
+    protected void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         PoseStack pose = guiGraphics.pose();
-        super.renderContent(guiGraphics, control, rect, mouseX, mouseY);
-        this.renderSelector(guiGraphics, control, rect, mouseX, mouseY);
+        super.renderContent(guiGraphics, mouseX, mouseY);
+        this.renderSelector(guiGraphics, mouseX, mouseY);
     }
 
-    protected void renderSelector(GuiGraphics graphics, GuiChildControl control, Rect rect, int mouseX, int mouseY) {
+    protected void renderSelector(GuiGraphics graphics, int mouseX, int mouseY) {
         var pose = graphics.pose();
         var icon = IconStyles.POS_ICON;
         float width = ((float) rect.getWidth()) / 3f;
@@ -89,16 +86,16 @@ public class WidgetClickableArea extends GuiIcon {
     }
 
     @Override
-    public boolean mouseClicked(Rect rect, double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
         playSound(SoundEvents.UI_BUTTON_CLICK);
         this.selected = true;
-        this.mouseMoved(rect, mouseX, mouseY);
+        this.mouseMoved(mouseX, mouseY);
         return true;
     }
 
     @Override
-    public void mouseMoved(Rect rect, double mouseX, double mouseY) {
-        super.mouseMoved(rect, mouseX, mouseY);
+    public void mouseMoved(double mouseX, double mouseY) {
+        super.mouseMoved(mouseX, mouseY);
         if (selected) {
             int areaX = (int) (mouseX / rect.getWidth() * 3d);
             int areaY = (int) (mouseY / rect.getHeight() * 3d);
@@ -121,9 +118,9 @@ public class WidgetClickableArea extends GuiIcon {
     }
 
     @Override
-    public void mouseReleased(Rect rect, double x, double y, int button) {
+    public void mouseReleased(double x, double y, int button) {
         this.selected = false;
-        super.mouseReleased(rect, x, y, button);
+        super.mouseReleased(x, y, button);
     }
 
     @Override
